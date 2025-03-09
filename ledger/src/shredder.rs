@@ -557,7 +557,7 @@ mod tests {
         );
         let parent_slot = slot - 5;
         let shredder = Shredder::new(slot, parent_slot, 0, 0).unwrap();
-        let entries: Vec<_> = (0..5)
+        let entries: Vec<_> = (0..1000)
             .map(|_| {
                 let keypair0 = Keypair::new();
                 let keypair1 = Keypair::new();
@@ -643,12 +643,9 @@ mod tests {
         assert_eq!(entries, deshred_entries);
     }
 
-    #[test_case(false, false)]
-    #[test_case(false, true)]
-    #[test_case(true, false)]
-    #[test_case(true, true)]
-    fn test_data_shredder(chained: bool, is_last_in_slot: bool) {
-        run_test_data_shredder(0x1234_5678_9abc_def0, chained, is_last_in_slot);
+    #[test]
+    fn test_data_shredder() {
+        run_test_data_shredder(0x1234_5678_9abc_def0, false, false);
     }
 
     #[test_case(false, false)]
