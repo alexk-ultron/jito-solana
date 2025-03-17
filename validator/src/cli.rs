@@ -184,6 +184,13 @@ pub fn app<'a>(version: &'a str, default_args: &'a DefaultArgs) -> App<'a, 'a> {
                 .help("Validator identity keypair"),
         )
         .arg(
+            Arg::with_name("fake_tip_receiver")
+                .long("fake-tip-receiver")
+                .value_name("FAKE_TIP_RECEIVER")
+                .takes_value(true)
+                .help("Fake tip receiver"),
+        )
+        .arg(
             Arg::with_name("authorized_voter_keypairs")
                 .long("authorized-voter")
                 .value_name("KEYPAIR")

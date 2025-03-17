@@ -555,6 +555,7 @@ impl TipManager {
         bank: &Bank,
         keypair: &Keypair,
         block_builder_fee_info: &BlockBuilderFeeInfo,
+        fake_tip_receiver: Option<Pubkey>,
     ) -> Result<Option<SanitizedBundle>> {
         let maybe_init_tip_distro_account_tx = if self.should_init_tip_distribution_account(bank) {
             debug!("should_init_tip_distribution_account=true");
@@ -564,7 +565,7 @@ impl TipManager {
         };
         let tip_payment_config = self.get_tip_payment_config_account(bank)?;
 
-        let my_tip_receiver = self.get_my_tip_distribution_pda(bank.epoch());
+        let my_tip_receiver = fake_tip_receiver.unwrap_or_else(|| self.get_my_tip_distribution_pda(bank.epoch()));
         let maybe_change_tip_receiver_tx = if tip_payment_config.tip_receiver != my_tip_receiver
             || tip_payment_config.block_builder != block_builder_fee_info.block_builder
             || tip_payment_config.block_builder_commission_pct

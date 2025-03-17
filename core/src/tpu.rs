@@ -139,6 +139,7 @@ impl Tpu {
         tip_manager_config: TipManagerConfig,
         shred_receiver_address: Arc<RwLock<Option<SocketAddr>>>,
         preallocated_bundle_cost: u64,
+        fake_tip_reciever: Option<Pubkey>,
     ) -> (Self, Vec<Arc<dyn NotifyKeyUpdate + Sync + Send>>) {
         let TpuSockets {
             transactions: transactions_sockets,
@@ -328,6 +329,7 @@ impl Tpu {
             log_messages_bytes_limit,
             exit.clone(),
             tip_manager,
+            fake_tip_reciever,
             bundle_account_locker,
             &block_builder_fee_info,
             preallocated_bundle_cost,

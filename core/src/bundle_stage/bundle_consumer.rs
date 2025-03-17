@@ -132,6 +132,7 @@ impl BundleConsumer {
         bank_start: &BankStart,
         unprocessed_transaction_storage: &mut UnprocessedTransactionStorage,
         bundle_stage_leader_metrics: &mut BundleStageLeaderMetrics,
+        fake_tip_receiver: Option<Pubkey>,
     ) {
         self.reserved_space.tick(&bank_start.working_bank);
 
@@ -155,6 +156,7 @@ impl BundleConsumer {
                     bundles,
                     bank_start,
                     bundle_stage_leader_metrics,
+                    fake_tip_receiver,
                 )
             },
         );
@@ -184,6 +186,7 @@ impl BundleConsumer {
         bundles: &[(ImmutableDeserializedBundle, SanitizedBundle)],
         bank_start: &BankStart,
         bundle_stage_leader_metrics: &mut BundleStageLeaderMetrics,
+        fake_tip_receiver: Option<Pubkey>,
     ) -> Vec<Result<(), BundleExecutionError>> {
         // BundleAccountLocker holds RW locks for ALL accounts in ALL transactions within a single bundle.
         // By pre-locking bundles before they're ready to be processed, it will prevent BankingStage from
@@ -221,6 +224,7 @@ impl BundleConsumer {
                             &locked_bundle,
                             bank_start,
                             bundle_stage_leader_metrics,
+                            fake_tip_receiver,
                         ));
                         bundle_stage_leader_metrics
                             .leader_slot_metrics_tracker()
@@ -261,6 +265,7 @@ impl BundleConsumer {
         locked_bundle: &LockedBundle,
         bank_start: &BankStart,
         bundle_stage_leader_metrics: &mut BundleStageLeaderMetrics,
+        fake_tip_receiver: Option<Pubkey>,
     ) -> Result<(), BundleExecutionError> {
         if !Bank::should_bank_still_be_processing_txs(
             &bank_start.bank_creation_time,
@@ -289,6 +294,7 @@ impl BundleConsumer {
                 reserved_space,
                 bank_start,
                 bundle_stage_leader_metrics,
+                fake_tip_receiver,
             );
 
             bundle_stage_leader_metrics
@@ -330,6 +336,7 @@ impl BundleConsumer {
         reserved_space: &BundleReservedSpaceManager,
         bank_start: &BankStart,
         bundle_stage_leader_metrics: &mut BundleStageLeaderMetrics,
+        fake_tip_receiver: Option<Pubkey>,
     ) -> Result<(), BundleExecutionError> {
         debug!("handle_tip_programs");
 
@@ -389,6 +396,7 @@ impl BundleConsumer {
             &bank_start.working_bank,
             &kp,
             &block_builder_fee_info.lock().unwrap(),
+            fake_tip_receiver,
         )?;
         debug!("tip_crank_bundle is_some: {}", tip_crank_bundle.is_some());
 
@@ -1093,6 +1101,7 @@ mod tests {
             &bank_start,
             &mut bundle_storage,
             &mut bundle_stage_leader_metrics,
+            None,
         );
 
         let mut transactions = Vec::new();
@@ -1245,6 +1254,7 @@ mod tests {
             &bank_start,
             &mut bundle_storage,
             &mut bundle_stage_leader_metrics,
+            None,
         );
 
         // its expected there are 3 transactions. One to initialize the tip program configuration, one to change the tip receiver,
@@ -1380,7 +1390,8 @@ mod tests {
                 Duration::from_secs(10),
                 &reserved_space,
                 &bank_start,
-                &mut bundle_stage_leader_metrics
+                &mut bundle_stage_leader_metrics,
+                None,
             ),
             Ok(())
         );
