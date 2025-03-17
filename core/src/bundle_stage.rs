@@ -26,7 +26,7 @@ use {
     solana_runtime::{
         prioritization_fee_cache::PrioritizationFeeCache, vote_sender_types::ReplayVoteSender,
     },
-    solana_sdk::timing::AtomicInterval,
+    solana_sdk::{pubkey::Pubkey, timing::AtomicInterval},
     std::{
         sync::{
             atomic::{AtomicBool, AtomicU64, Ordering},
@@ -206,6 +206,7 @@ impl BundleStage {
         log_messages_bytes_limit: Option<usize>,
         exit: Arc<AtomicBool>,
         tip_manager: TipManager,
+        fake_tip_receiver: Option<Pubkey>,
         bundle_account_locker: BundleAccountLocker,
         block_builder_fee_info: &Arc<Mutex<BlockBuilderFeeInfo>>,
         preallocated_bundle_cost: u64,
@@ -220,6 +221,7 @@ impl BundleStage {
             log_messages_bytes_limit,
             exit,
             tip_manager,
+            fake_tip_receiver,
             bundle_account_locker,
             MAX_BUNDLE_RETRY_DURATION,
             block_builder_fee_info,
@@ -242,6 +244,7 @@ impl BundleStage {
         log_message_bytes_limit: Option<usize>,
         exit: Arc<AtomicBool>,
         tip_manager: TipManager,
+        fake_tip_receiver: Option<Pubkey>,
         bundle_account_locker: BundleAccountLocker,
         max_bundle_retry_duration: Duration,
         block_builder_fee_info: &Arc<Mutex<BlockBuilderFeeInfo>>,
@@ -300,6 +303,7 @@ impl BundleStage {
                     consumer,
                     BUNDLE_STAGE_ID,
                     unprocessed_bundle_storage,
+                    fake_tip_receiver,
                     exit,
                 );
             })
@@ -315,6 +319,7 @@ impl BundleStage {
         mut consumer: BundleConsumer,
         id: u32,
         mut unprocessed_bundle_storage: UnprocessedTransactionStorage,
+        fake_tip_receiver: Option<Pubkey>,
         exit: Arc<AtomicBool>,
     ) {
         let mut last_metrics_update = Instant::now();
@@ -332,6 +337,7 @@ impl BundleStage {
                         &mut consumer,
                         &mut unprocessed_bundle_storage,
                         &mut bundle_stage_leader_metrics,
+                        fake_tip_receiver,
                     ));
                 bundle_stage_leader_metrics
                     .leader_slot_metrics_tracker()
@@ -371,6 +377,7 @@ impl BundleStage {
         consumer: &mut BundleConsumer,
         unprocessed_bundle_storage: &mut UnprocessedTransactionStorage,
         bundle_stage_leader_metrics: &mut BundleStageLeaderMetrics,
+        fake_tip_receiver: Option<Pubkey>,
     ) {
         let (decision, make_decision_time_us) =
             measure_us!(decision_maker.make_consume_or_forward_decision());
@@ -397,6 +404,7 @@ impl BundleStage {
                         &bank_start,
                         unprocessed_bundle_storage,
                         bundle_stage_leader_metrics,
+                        fake_tip_receiver,
                     ));
                 bundle_stage_leader_metrics
                     .leader_slot_metrics_tracker()

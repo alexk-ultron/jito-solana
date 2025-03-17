@@ -1583,6 +1583,8 @@ pub fn main() {
         trust_packets: matches.is_present("trust_block_engine_packets"),
     };
 
+    let fake_tip_receiver =  pubkey_of(&matches, "fake_tip_receiver");
+
     // Defaults are set in cli definition, safe to use unwrap() here
     let expected_heartbeat_interval_ms: u64 =
         value_of(&matches, "relayer_expected_heartbeat_interval_ms").unwrap();
@@ -1771,6 +1773,7 @@ pub fn main() {
         wen_restart_coordinator: value_t!(matches, "wen_restart_coordinator", Pubkey).ok(),
         preallocated_bundle_cost: value_of(&matches, "preallocated_bundle_cost")
             .expect("preallocated_bundle_cost set as default"),
+        fake_tip_receiver,
         ..ValidatorConfig::default()
     };
 
